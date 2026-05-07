@@ -32,35 +32,170 @@ CHECK_INTERVAL = 5 * 60  # seconds between full cycles (5 min)
 
 # ── STORES ─────────────────────────────────────────────────────────────────────
 STORES = [
-    # Canada
+    # ── Canada ──────────────────────────────────────────────────────────────────
     {
         "name": "Hairy Tarantula",
         "url": "https://hairyt.com/collections/one-piece-cg-sealed-products",
         "watch": {"OP-17": ["op-17", "op17"]},
     },
     {
-        "name": "Banana Games",
-        "url": "https://bananagames.ca/products/one-piece-cg-op-17-booster-box",
-        "watch": {"OP-17": ["op-17", "op17", "add to cart"]},
-    },
-    {
-        "name": "Red Riot Games",
-        "url": "https://redriotgames.ca/products/one-piece-cg-op-17-pre-orders",
+        "name": "401 Games",
+        "url": "https://store.401games.ca/collections/one-piece",
         "watch": {"OP-17": ["op-17", "op17"]},
     },
     {
-        "name": "401 Games",
-        "url": "https://store.401games.ca/collections/one-piece-pre-orders",
+        "name": "Level Up Games Canada",
+        "url": "https://levelupgames.ca",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "PvP Shoppe",
+        "url": "https://www.pvpshoppe.com",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Top Shelf Co.",
+        "url": "https://topshelfco.ca",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Doe's Cards",
+        "url": "https://doescards.ca",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Game Time Collectibles",
+        "url": "https://gametimecollectibles.com",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Three Kingdoms Games",
+        "url": "https://threekingdomsgames.com",
         "watch": {"OP-17": ["op-17", "op17"]},
     },
     {
         "name": "Hobbiesville",
-        "url": "https://hobbiesville.com/products/one-piece-cg-op-17-booster-box-pre-order-copy",
+        "url": "https://hobbiesville.com/collections/one-piece-card-game",
         "watch": {"OP-17": ["op-17", "op17"]},
     },
     {
-        "name": "Kanzen Games",
-        "url": "https://kanzengames.com/collections/one-piece-pre-order-1",
+        "name": "KanZen Games",
+        "url": "https://kanzengames.com/collections/one-piece-card-game",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Meeplemart",
+        "url": "https://www.meeplemart.com/one-piece-card-game.aspx",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Deck Out Gaming",
+        "url": "https://deckoutgaming.ca/collections/one-piece-card-game",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Face to Face Games",
+        "url": "https://www.facetofacegames.com/one-piece",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Magic Stronghold",
+        "url": "https://www.magicstronghold.com/store/category/one-piece-card-game",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Carta Magica",
+        "url": "https://cartamagica.com/collections/one-piece-card-game",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Imaginaire",
+        "url": "https://imaginaire.com/en/games-and-puzzles/one-piece-card-game.html",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Trinity Hobby",
+        "url": "https://trinityhobby.com/collections/one-piece",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "The Connection Games",
+        "url": "https://theconnectiongames.com/collections/one-piece-card-game",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Untouchables",
+        "url": "https://untouchables.ca/collections/one-piece-card-game",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Toy Trove",
+        "url": "https://toytrove.com/collections/one-piece-card-game",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Red Riot Games",
+        "url": "https://redriotgames.ca/collections/one-piece-card-game",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Banana Games",
+        "url": "https://bananagames.ca/products/one-piece-cg-op-17-booster-box",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Rimrock Hobbies",
+        "url": "https://rimrockhobbies.com/product/bandai-one-piece-card-game-op-17-booster-box-pre-order/",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Manta Trading",
+        "url": "https://mantatrading.com/collections/one-piece",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Torchlight Games",
+        "url": "https://torchlightgh.com/collections/one-piece-card-game",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Skyfox Games",
+        "url": "https://skyfoxgames.com/collections/one-piece-card-game",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Taps Games",
+        "url": "https://tapsgames.com/collections/one-piece-card-game",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Loot Lords",
+        "url": "https://www.lootlords.ca/collections/one-piece-card-game",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Grand Line TCG Vancouver",
+        "url": "https://grandlinetcgvancouver.ca",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Lotus Petal Gaming",
+        "url": "https://lotuspetalgaming.com/collections/one-piece",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Arcadia Collectibles",
+        "url": "https://arcadiacollectibles.com",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Flaring Lair",
+        "url": "https://flaringlair.ca",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Empire Trading",
+        "url": "https://empiretradingco.com",
         "watch": {"OP-17": ["op-17", "op17"]},
     },
     {
@@ -84,19 +219,29 @@ STORES = [
         "watch": {"OP-17": ["op-17", "op17"]},
     },
     {
-        "name": "Rimrock Hobbies",
-        "url": "https://rimrockhobbies.com/product/bandai-one-piece-card-game-op-17-booster-box-pre-order/",
+        "name": "NorthlineCards",
+        "url": "https://northlinecards.ca",
         "watch": {"OP-17": ["op-17", "op17"]},
     },
-    # USA
+    {
+        "name": "EA Collectibles",
+        "url": "https://www.eacollectibles.com/collections/one-piece-booster-boxes",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Snapcaster Canada",
+        "url": "https://snapcaster.ca",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    # ── USA ─────────────────────────────────────────────────────────────────────
     {
         "name": "Miniature Market",
         "url": "https://www.miniaturemarket.com/One-Piece-TCG-Set-17-OP-17-Booster-Box-24-Preorder/BAN2863367-BOX",
-        "watch": {"OP-17": ["op-17", "op17", "add to cart"]},
+        "watch": {"OP-17": ["op-17", "op17"]},
     },
     {
         "name": "CardXPlaza",
-        "url": "https://www.cardxplaza.com/one-piece-products?page=2",
+        "url": "https://www.cardxplaza.com/one-piece-products",
         "watch": {"OP-17": ["op-17", "op17"]},
     },
     {
@@ -104,7 +249,47 @@ STORES = [
         "url": "https://www.hypnocomics.com/product/one-piece-tcg-op-17-booster-box-pre-order-8-28-2026/FZVYE2EOH4MBGEFKSCGRYTGR",
         "watch": {"OP-17": ["op-17", "op17"]},
     },
-    # EU
+    {
+        "name": "Gamers Guild AZ",
+        "url": "https://gamersguildaz.com",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Zulu's Board Game Cafe",
+        "url": "https://zulusgames.com",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Collectors Cache",
+        "url": "https://collectorscache.com",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Pro-Play Games",
+        "url": "https://pro-playgames.com",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "CoreTCG",
+        "url": "https://coretcg.crystalcommerce.com",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "TCGplayer",
+        "url": "https://www.tcgplayer.com/search/one-piece-card-game/product?q=op-17",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Amazon Canada",
+        "url": "https://www.amazon.ca/s?k=one+piece+op-17+booster+box",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Amazon USA",
+        "url": "https://www.amazon.com/s?k=one+piece+op-17+booster+box",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    # ── EU ──────────────────────────────────────────────────────────────────────
     {
         "name": "OUPI.eu",
         "url": "https://oupi.eu/en/booster-box-one-piece/7370-op-17-sealed-booster-box-case-english-one-piece-card-game.html",
@@ -118,6 +303,16 @@ STORES = [
     {
         "name": "Chobanov Games",
         "url": "https://chobanovgamesltd.com/product/pre-order-op17-sealed-booster-case-12x-boxes-english-one-piece-card-game.html",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "Cardmarket",
+        "url": "https://www.cardmarket.com/en/OnePiece/Products/Booster-Boxes?searchString=op-17",
+        "watch": {"OP-17": ["op-17", "op17"]},
+    },
+    {
+        "name": "OPTCG Market",
+        "url": "https://www.optcg.gg/market",
         "watch": {"OP-17": ["op-17", "op17"]},
     },
 ]
