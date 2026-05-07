@@ -1,20 +1,19 @@
 """
 One Piece CG Stock Tracker — Multi-Store
-Monitors OP-17 (+ OP-14, OP-15) across all major retailers.
+Monitors OP-17 across all major retailers.
 Sends Telegram alerts when stock status changes.
+
+SETUP (Railway):
+  1. Go to your project -> Variables tab
+  2. Add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID
+  3. Redeploy — done
 
 SETUP (local):
   1. pip install requests beautifulsoup4
-  2. Set environment variables:
-     Windows:   set TELEGRAM_BOT_TOKEN=xxx  &&  set TELEGRAM_CHAT_ID=yyy
-     Mac/Linux: export TELEGRAM_BOT_TOKEN=xxx && export TELEGRAM_CHAT_ID=yyy
+  2. set TELEGRAM_BOT_TOKEN=xxx
+     set TELEGRAM_CHAT_ID=yyy
   3. Test:  python op17_tracker.py --test
   4. Run:   python op17_tracker.py
-
-SETUP (Railway):
-  1. Go to your project → Variables tab
-  2. Add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID
-  3. Redeploy — done
 """
 
 import requests
@@ -25,21 +24,19 @@ import random
 import os
 from datetime import datetime
 
-# ── CONFIG — reads from environment variables ──────────────────────────────────
+# ── CONFIG ─────────────────────────────────────────────────────────────────────
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID   = os.environ.get("TELEGRAM_CHAT_ID", "")
 
-CHECK_INTERVAL = 5 * 60   # seconds between full cycles (5 min)
+CHECK_INTERVAL = 5 * 60  # seconds between full cycles (5 min)
 
 # ── STORES ─────────────────────────────────────────────────────────────────────
 STORES = [
-    # ── Canada ──────────────────────────────────────────────────────────────────
+    # Canada
     {
         "name": "Hairy Tarantula",
         "url": "https://hairyt.com/collections/one-piece-cg-sealed-products",
-        "watch": {
-            "OP-17": ["op-17", "op17"],
-        },
+        "watch": {"OP-17": ["op-17", "op17"]},
     },
     {
         "name": "Banana Games",
@@ -91,7 +88,7 @@ STORES = [
         "url": "https://rimrockhobbies.com/product/bandai-one-piece-card-game-op-17-booster-box-pre-order/",
         "watch": {"OP-17": ["op-17", "op17"]},
     },
-    # ── USA ─────────────────────────────────────────────────────────────────────
+    # USA
     {
         "name": "Miniature Market",
         "url": "https://www.miniaturemarket.com/One-Piece-TCG-Set-17-OP-17-Booster-Box-24-Preorder/BAN2863367-BOX",
@@ -107,7 +104,7 @@ STORES = [
         "url": "https://www.hypnocomics.com/product/one-piece-tcg-op-17-booster-box-pre-order-8-28-2026/FZVYE2EOH4MBGEFKSCGRYTGR",
         "watch": {"OP-17": ["op-17", "op17"]},
     },
-    # ── EU ──────────────────────────────────────────────────────────────────────
+    # EU
     {
         "name": "OUPI.eu",
         "url": "https://oupi.eu/en/booster-box-one-piece/7370-op-17-sealed-booster-box-case-english-one-piece-card-game.html",
@@ -151,6 +148,8 @@ def get_headers():
 
 
 def send_telegram(message: str) -> bool:
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return False
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     try:
         r = requests.post(url, json={
@@ -209,9 +208,7 @@ def run_test():
         print("   OK\n")
     except ValueError as e:
         print(f"   ERROR: {e}")
-        print("\n   Set your variables first:")
-        print("   Railway: Variables tab → add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID")
-        print("   Windows: set TELEGRAM_BOT_TOKEN=xxx && set TELEGRAM_CHAT_ID=yyy\n")
+        print("   Railway: Variables tab -> add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID\n")
         return
 
     print(f"2. Checking {len(STORES)} stores...\n")
@@ -220,19 +217,18 @@ def run_test():
         results = check_store(store)
         for product, status in results.items():
             label = "IN STOCK" if status is True else ("PRE-ORDER/SOLD OUT" if status == "preorder" else "not found")
-            line = f"  {store['name']} — {product}: {label}"
+            line = f"  {store['name']} - {product}: {label}"
             print(line)
             lines.append(line)
         time.sleep(1)
 
     print("\n3. Sending Telegram test message...")
-    msg = (
-        "<b>One Piece Tracker — Test OK!</b>\n\n"
+    ok = send_telegram(
+        "<b>One Piece Tracker - Test OK!</b>\n\n"
         + "\n".join(lines)
         + f"\n\nChecked {len(STORES)} stores at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     )
-    ok = send_telegram(msg)
-    print("   Sent! Check your Telegram." if ok else "   FAILED — check token/chat ID.")
+    print("   Sent! Check your Telegram." if ok else "   FAILED - check token/chat ID.")
     print("\nRun normally with: python op17_tracker.py\n")
 
 
@@ -240,13 +236,13 @@ def main():
     validate_config()
 
     log.info("=" * 60)
-    log.info(f"One Piece Tracker started — {len(STORES)} stores")
+    log.info(f"One Piece Tracker started - {len(STORES)} stores")
     log.info(f"Checking every {CHECK_INTERVAL // 60} minutes")
     log.info("=" * 60)
 
     send_telegram(
         "<b>One Piece Tracker running!</b>\n"
-        f"Monitoring {len(STORES)} stores for OP-14, OP-15, OP-17\n"
+        f"Monitoring {len(STORES)} stores for OP-17\n"
         f"Checking every {CHECK_INTERVAL // 60} min"
     )
 
@@ -265,20 +261,24 @@ def main():
 
                 if prev is None:
                     log.info(f"  {store['name']} | {product}: {status} (initial)")
+
                 elif status is True and prev != True:
                     log.info(f"  {store['name']} | {product}: NOW IN STOCK!")
                     alerts.append(
-                        f"🚨 <b>{product} IN STOCK</b> at <b>{store['name']}</b>!\n"
+                        f"ALERT: <b>{product} IN STOCK</b> at <b>{store['name']}</b>!\n"
                         f"<a href='{store['url']}'>Buy now</a>"
                     )
+
                 elif status == "preorder" and prev != "preorder":
                     log.info(f"  {store['name']} | {product}: pre-order listed")
                     alerts.append(
-                        f"📋 <b>{product}</b> listed at <b>{store['name']}</b> (pre-order)\n"
+                        f"INFO: <b>{product}</b> listed at <b>{store['name']}</b> (pre-order)\n"
                         f"<a href='{store['url']}'>Check it out</a>"
                     )
+
                 elif status is False and prev is True:
                     log.info(f"  {store['name']} | {product}: went out of stock")
+
                 else:
                     log.info(f"  {store['name']} | {product}: {status} (no change)")
 
@@ -287,7 +287,7 @@ def main():
 
         if alerts:
             send_telegram(
-                f"<b>Stock Alert — {datetime.now().strftime('%Y-%m-%d %H:%M')}</b>\n\n"
+                f"<b>Stock Alert - {datetime.now().strftime('%Y-%m-%d %H:%M')}</b>\n\n"
                 + "\n\n".join(alerts)
             )
 
