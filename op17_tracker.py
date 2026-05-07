@@ -38,8 +38,6 @@ STORES = [
         "name": "Hairy Tarantula",
         "url": "https://hairyt.com/collections/one-piece-cg-sealed-products",
         "watch": {
-            "OP-14": ["op-14", "op14"],
-            "OP-15": ["op-15", "op15"],
             "OP-17": ["op-17", "op17"],
         },
     },
