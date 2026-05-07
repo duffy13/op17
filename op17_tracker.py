@@ -28,7 +28,7 @@ from datetime import datetime
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID   = os.environ.get("TELEGRAM_CHAT_ID", "")
 
-CHECK_INTERVAL = 5 * 60  # seconds between full cycles (5 min)
+CHECK_INTERVAL = 3 * 60  # seconds between full cycles (3 min)
 
 # ── STORES ─────────────────────────────────────────────────────────────────────
 STORES = [
