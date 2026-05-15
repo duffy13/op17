@@ -322,6 +322,13 @@ SOLD_OUT_SIGNALS = [
     "notify me when available", "coming soon",
 ]
 
+# Must have one of these to confirm an actual buy/preorder button exists
+BUY_SIGNALS = [
+    "add to cart", "pre-order", "preorder", "pre order",
+    "buy now", "order now", "reserve now", "add to bag",
+    "in stock", "ships", "get it now",
+]
+
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
@@ -371,19 +378,70 @@ def fetch_page(url: str):
         return None
 
 
+def fetch_all_pages(base_url: str) -> str:
+    """
+    Fetches page 1 of a URL, then keeps fetching ?page=2, ?page=3 etc.
+    until the page returns no new content or is empty.
+    Returns all page content combined as one big string.
+    """
+    all_text = ""
+    page_num = 1
+    last_text = None
+
+    # Detect if URL already has query params
+    separator = "&" if "?" in base_url else "?"
+
+    while page_num <= 20:  # safety cap at 20 pages
+        if page_num == 1:
+            url = base_url
+        else:
+            url = f"{base_url}{separator}page={page_num}"
+
+        text = fetch_page(url)
+
+        if text is None:
+            break  # page failed to load, stop
+
+        if text == last_text:
+            break  # same content as last page = no more pages
+
+        if page_num > 1 and len(text.strip()) < 500:
+            break  # nearly empty page = end of pagination
+
+        all_text += text
+        last_text = text
+        page_num += 1
+        time.sleep(0.5)  # small delay between pages to be polite
+
+    log.debug(f"  Fetched {page_num - 1} page(s) from {base_url[:60]}")
+    return all_text
+
+
 def check_store(store: dict) -> dict:
     results = {}
-    page_text = fetch_page(store["url"])
+    # Fetch ALL pages of the store
+    page_text = fetch_all_pages(store["url"])
+
     for product, terms in store["watch"].items():
-        if page_text is None:
+        if not page_text:
             results[product] = False
             continue
+        # Step 1: product name found anywhere across all pages
         found = any(t.lower() in page_text for t in terms)
-        if found:
-            sold_out = any(s in page_text for s in SOLD_OUT_SIGNALS)
-            results[product] = "preorder" if sold_out else True
-        else:
+        if not found:
             results[product] = False
+            continue
+        # Step 2: must have an actual buy/preorder button
+        has_button = any(b in page_text for b in BUY_SIGNALS)
+        if not has_button:
+            results[product] = False  # listed but no button — skip
+            continue
+        # Step 3: check if sold out
+        sold_out = any(s in page_text for s in SOLD_OUT_SIGNALS)
+        if sold_out:
+            results[product] = "preorder"
+        else:
+            results[product] = True
     return results
 
 
