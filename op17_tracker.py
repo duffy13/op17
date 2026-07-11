@@ -1,7 +1,10 @@
 """
 One Piece CG Stock Tracker — Multi-Store
-Monitors OP-17 across all major retailers.
-Sends Telegram alerts when stock status changes.
+Monitors OP-17, OP-21, EB-05, and the Anniversary/Gift Box sets across all
+major retailers. Sends Telegram alerts when stock status changes.
+
+Each product gets its own independent alert — e.g. an OP-17 restock and an
+OP-21 restock at the same store fire two separate, clearly-labeled messages.
 
 SETUP (Railway):
   1. Go to your project -> Variables tab
@@ -31,322 +34,125 @@ TELEGRAM_CHAT_ID   = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 CHECK_INTERVAL = 3 * 60  # seconds between full cycles (3 min)
 
+# ── PRODUCT WATCH TERMS ───────────────────────────────────────────────────────
+# Single source of truth for every product we track. To add/remove a product
+# in the future, edit ONLY this section — every store below references it.
+#
+# Each product also gets its own "emoji tag" used in Telegram alerts so
+# messages are instantly recognizable at a glance.
+
+PRODUCT_EMOJI = {
+    "OP-17": "🃏",
+    "OP-21": "🎴",
+    "EB-05": "🀄",
+    "3rd Anniversary Set": "🎉",
+    "4th Anniversary Set (Chinese)": "🎊",
+    "Exclusive 4th Anniversary Gift Box (Simplified Chinese)": "🎁",
+}
+
+# Full term set — used by the large majority of stores (Canada, USA, EU, and
+# most Asian retailers with full English/Chinese listings).
+WATCH_TERMS_FULL = {
+    "OP-17": ["op-17", "op17"],
+    "OP-21": ["op-21", "op21"],
+    "EB-05": ["eb-05", "eb05"],
+    "3rd Anniversary Set": [
+        "3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary",
+    ],
+    "4th Anniversary Set (Chinese)": [
+        "4th anniversary", "4th-anniversary", "chinese anniversary",
+        "anniversary set chinese", "op-4th",
+    ],
+    "Exclusive 4th Anniversary Gift Box (Simplified Chinese)": [
+        "4th anniversary gift box", "exclusive 4th anniversary",
+        "anniversary gift box", "4th-anniversary-gift-box",
+        "simplified chinese gift box", "op-4th-giftbox",
+    ],
+}
+
+# Compact term set — used by stores whose listings only reliably use shorter,
+# looser phrasing (kept consistent with the original script's behavior).
+WATCH_TERMS_COMPACT = {
+    "OP-17": ["op-17", "op17"],
+    "OP-21": ["op-21", "op21"],
+    "EB-05": ["eb-05", "eb05"],
+    "3rd Anniversary Set": ["3rd anniversary", "anniversary set"],
+    "4th Anniversary Set (Chinese)": [
+        "4th anniversary", "4th-anniversary", "chinese anniversary",
+    ],
+    "Exclusive 4th Anniversary Gift Box (Simplified Chinese)": [
+        "4th anniversary gift box", "anniversary gift box", "gift box chinese",
+    ],
+}
+
 # ── STORES ─────────────────────────────────────────────────────────────────────
 STORES = [
     # ── Canada ──────────────────────────────────────────────────────────────────
-    {
-        "name": "Hairy Tarantula",
-        "url": "https://hairyt.com/collections/one-piece-cg-sealed-products",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "401 Games",
-        "url": "https://store.401games.ca/collections/one-piece",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Level Up Games Canada",
-        "url": "https://levelupgames.ca",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "PvP Shoppe",
-        "url": "https://www.pvpshoppe.com",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Top Shelf Co.",
-        "url": "https://topshelfco.ca",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Doe's Cards",
-        "url": "https://doescards.ca",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Game Time Collectibles",
-        "url": "https://gametimecollectibles.com",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Three Kingdoms Games",
-        "url": "https://threekingdomsgames.com",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Hobbiesville",
-        "url": "https://hobbiesville.com/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "KanZen Games",
-        "url": "https://kanzengames.com/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Meeplemart",
-        "url": "https://www.meeplemart.com/one-piece-card-game.aspx",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Deck Out Gaming",
-        "url": "https://deckoutgaming.ca/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Face to Face Games",
-        "url": "https://www.facetofacegames.com/one-piece",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Magic Stronghold",
-        "url": "https://www.magicstronghold.com/store/category/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Carta Magica",
-        "url": "https://cartamagica.com/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Imaginaire",
-        "url": "https://imaginaire.com/en/games-and-puzzles/one-piece-card-game.html",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Trinity Hobby",
-        "url": "https://trinityhobby.com/collections/one-piece",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "The Connection Games",
-        "url": "https://theconnectiongames.com/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Untouchables",
-        "url": "https://untouchables.ca/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Toy Trove",
-        "url": "https://toytrove.com/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Red Riot Games",
-        "url": "https://redriotgames.ca/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Banana Games",
-        "url": "https://bananagames.ca/products/one-piece-cg-op-17-booster-box",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Rimrock Hobbies",
-        "url": "https://rimrockhobbies.com/product/bandai-one-piece-card-game-op-17-booster-box-pre-order/",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Manta Trading",
-        "url": "https://mantatrading.com/collections/one-piece",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Torchlight Games",
-        "url": "https://torchlightgh.com/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Skyfox Games",
-        "url": "https://skyfoxgames.com/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Taps Games",
-        "url": "https://tapsgames.com/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Loot Lords",
-        "url": "https://www.lootlords.ca/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Grand Line TCG Vancouver",
-        "url": "https://grandlinetcgvancouver.ca",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Lotus Petal Gaming",
-        "url": "https://lotuspetalgaming.com/collections/one-piece",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Arcadia Collectibles",
-        "url": "https://arcadiacollectibles.com",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Flaring Lair",
-        "url": "https://flaringlair.ca",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Empire Trading",
-        "url": "https://empiretradingco.com",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Game Shack",
-        "url": "https://www.gameshack.ca/products/one-piece-op17-bpk",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Miraj Trading",
-        "url": "https://www.mirajtrading.com/en-us/products/one-piece-cg-op-17-booster-box-pre-order",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Breakaway Sports Cards",
-        "url": "https://breakawaysc.com/product/one-piece-op-17-booster-box/",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Beckett Castle TCG",
-        "url": "https://beckettcastletcg.com/",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "NorthlineCards",
-        "url": "https://northlinecards.ca",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "EA Collectibles",
-        "url": "https://www.eacollectibles.com/collections/one-piece-booster-boxes",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Snapcaster Canada",
-        "url": "https://snapcaster.ca",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
+    {"name": "Hairy Tarantula", "url": "https://hairyt.com/collections/one-piece-cg-sealed-products", "watch": WATCH_TERMS_FULL},
+    {"name": "401 Games", "url": "https://store.401games.ca/collections/one-piece", "watch": WATCH_TERMS_FULL},
+    {"name": "Level Up Games Canada", "url": "https://levelupgames.ca", "watch": WATCH_TERMS_FULL},
+    {"name": "PvP Shoppe", "url": "https://www.pvpshoppe.com", "watch": WATCH_TERMS_FULL},
+    {"name": "Top Shelf Co.", "url": "https://topshelfco.ca", "watch": WATCH_TERMS_FULL},
+    {"name": "Doe's Cards", "url": "https://doescards.ca", "watch": WATCH_TERMS_FULL},
+    {"name": "Game Time Collectibles", "url": "https://gametimecollectibles.com", "watch": WATCH_TERMS_FULL},
+    {"name": "Three Kingdoms Games", "url": "https://threekingdomsgames.com", "watch": WATCH_TERMS_FULL},
+    {"name": "Hobbiesville", "url": "https://hobbiesville.com/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "KanZen Games", "url": "https://kanzengames.com/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Meeplemart", "url": "https://www.meeplemart.com/one-piece-card-game.aspx", "watch": WATCH_TERMS_FULL},
+    {"name": "Deck Out Gaming", "url": "https://deckoutgaming.ca/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Face to Face Games", "url": "https://www.facetofacegames.com/one-piece", "watch": WATCH_TERMS_FULL},
+    {"name": "Magic Stronghold", "url": "https://www.magicstronghold.com/store/category/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Carta Magica", "url": "https://cartamagica.com/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Imaginaire", "url": "https://imaginaire.com/en/games-and-puzzles/one-piece-card-game.html", "watch": WATCH_TERMS_FULL},
+    {"name": "Trinity Hobby", "url": "https://trinityhobby.com/collections/one-piece", "watch": WATCH_TERMS_FULL},
+    {"name": "The Connection Games", "url": "https://theconnectiongames.com/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Untouchables", "url": "https://untouchables.ca/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Toy Trove", "url": "https://toytrove.com/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Red Riot Games", "url": "https://redriotgames.ca/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Banana Games", "url": "https://bananagames.ca/products/one-piece-cg-op-17-booster-box", "watch": WATCH_TERMS_FULL},
+    {"name": "Rimrock Hobbies", "url": "https://rimrockhobbies.com/product/bandai-one-piece-card-game-op-17-booster-box-pre-order/", "watch": WATCH_TERMS_FULL},
+    {"name": "Manta Trading", "url": "https://mantatrading.com/collections/one-piece", "watch": WATCH_TERMS_FULL},
+    {"name": "Torchlight Games", "url": "https://torchlightgh.com/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Skyfox Games", "url": "https://skyfoxgames.com/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Taps Games", "url": "https://tapsgames.com/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Loot Lords", "url": "https://www.lootlords.ca/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Grand Line TCG Vancouver", "url": "https://grandlinetcgvancouver.ca", "watch": WATCH_TERMS_FULL},
+    {"name": "Lotus Petal Gaming", "url": "https://lotuspetalgaming.com/collections/one-piece", "watch": WATCH_TERMS_FULL},
+    {"name": "Arcadia Collectibles", "url": "https://arcadiacollectibles.com", "watch": WATCH_TERMS_FULL},
+    {"name": "Flaring Lair", "url": "https://flaringlair.ca", "watch": WATCH_TERMS_FULL},
+    {"name": "Empire Trading", "url": "https://empiretradingco.com", "watch": WATCH_TERMS_FULL},
+    {"name": "Game Shack", "url": "https://www.gameshack.ca/products/one-piece-op17-bpk", "watch": WATCH_TERMS_FULL},
+    {"name": "Miraj Trading", "url": "https://www.mirajtrading.com/en-us/products/one-piece-cg-op-17-booster-box-pre-order", "watch": WATCH_TERMS_FULL},
+    {"name": "Breakaway Sports Cards", "url": "https://breakawaysc.com/product/one-piece-op-17-booster-box/", "watch": WATCH_TERMS_FULL},
+    {"name": "Beckett Castle TCG", "url": "https://beckettcastletcg.com/", "watch": WATCH_TERMS_FULL},
+    {"name": "NorthlineCards", "url": "https://northlinecards.ca", "watch": WATCH_TERMS_FULL},
+    {"name": "EA Collectibles", "url": "https://www.eacollectibles.com/collections/one-piece-booster-boxes", "watch": WATCH_TERMS_FULL},
+    {"name": "Snapcaster Canada", "url": "https://snapcaster.ca", "watch": WATCH_TERMS_FULL},
     # ── USA ─────────────────────────────────────────────────────────────────────
-    {
-        "name": "Miniature Market",
-        "url": "https://www.miniaturemarket.com/One-Piece-TCG-Set-17-OP-17-Booster-Box-24-Preorder/BAN2863367-BOX",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "CardXPlaza",
-        "url": "https://www.cardxplaza.com/one-piece-products",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Hypno Comics",
-        "url": "https://www.hypnocomics.com/product/one-piece-tcg-op-17-booster-box-pre-order-8-28-2026/FZVYE2EOH4MBGEFKSCGRYTGR",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Gamers Guild AZ",
-        "url": "https://gamersguildaz.com",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Zulu's Board Game Cafe",
-        "url": "https://zulusgames.com",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Collectors Cache",
-        "url": "https://collectorscache.com",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Pro-Play Games",
-        "url": "https://pro-playgames.com",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "CoreTCG",
-        "url": "https://coretcg.crystalcommerce.com",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "TCGplayer",
-        "url": "https://www.tcgplayer.com/search/one-piece-card-game/product?q=op-17",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Amazon Canada",
-        "url": "https://www.amazon.ca/s?k=one+piece+op-17+booster+box",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Amazon USA",
-        "url": "https://www.amazon.com/s?k=one+piece+op-17+booster+box",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
+    {"name": "Miniature Market", "url": "https://www.miniaturemarket.com/One-Piece-TCG-Set-17-OP-17-Booster-Box-24-Preorder/BAN2863367-BOX", "watch": WATCH_TERMS_FULL},
+    {"name": "CardXPlaza", "url": "https://www.cardxplaza.com/one-piece-products", "watch": WATCH_TERMS_FULL},
+    {"name": "Hypno Comics", "url": "https://www.hypnocomics.com/product/one-piece-tcg-op-17-booster-box-pre-order-8-28-2026/FZVYE2EOH4MBGEFKSCGRYTGR", "watch": WATCH_TERMS_FULL},
+    {"name": "Gamers Guild AZ", "url": "https://gamersguildaz.com", "watch": WATCH_TERMS_FULL},
+    {"name": "Zulu's Board Game Cafe", "url": "https://zulusgames.com", "watch": WATCH_TERMS_FULL},
+    {"name": "Collectors Cache", "url": "https://collectorscache.com", "watch": WATCH_TERMS_FULL},
+    {"name": "Pro-Play Games", "url": "https://pro-playgames.com", "watch": WATCH_TERMS_FULL},
+    {"name": "CoreTCG", "url": "https://coretcg.crystalcommerce.com", "watch": WATCH_TERMS_FULL},
+    {"name": "TCGplayer", "url": "https://www.tcgplayer.com/search/one-piece-card-game/product?q=op-17", "watch": WATCH_TERMS_FULL},
+    {"name": "Amazon Canada", "url": "https://www.amazon.ca/s?k=one+piece+op-17+booster+box", "watch": WATCH_TERMS_FULL},
+    {"name": "Amazon USA", "url": "https://www.amazon.com/s?k=one+piece+op-17+booster+box", "watch": WATCH_TERMS_FULL},
     # ── EU ──────────────────────────────────────────────────────────────────────
-    {
-        "name": "OUPI.eu",
-        "url": "https://oupi.eu/en/booster-box-one-piece/7370-op-17-sealed-booster-box-case-english-one-piece-card-game.html",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Zatu Games",
-        "url": "https://zatu.com/collections/pre-orders-one-piece",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Chobanov Games",
-        "url": "https://chobanovgamesltd.com/product/pre-order-op17-sealed-booster-case-12x-boxes-english-one-piece-card-game.html",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Cardmarket",
-        "url": "https://www.cardmarket.com/en/OnePiece/Products/Booster-Boxes?searchString=op-17",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "OPTCG Market",
-        "url": "https://www.optcg.gg/market",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
+    {"name": "OUPI.eu", "url": "https://oupi.eu/en/booster-box-one-piece/7370-op-17-sealed-booster-box-case-english-one-piece-card-game.html", "watch": WATCH_TERMS_FULL},
+    {"name": "Zatu Games", "url": "https://zatu.com/collections/pre-orders-one-piece", "watch": WATCH_TERMS_FULL},
+    {"name": "Chobanov Games", "url": "https://chobanovgamesltd.com/product/pre-order-op17-sealed-booster-case-12x-boxes-english-one-piece-card-game.html", "watch": WATCH_TERMS_FULL},
+    {"name": "Cardmarket", "url": "https://www.cardmarket.com/en/OnePiece/Products/Booster-Boxes?searchString=op-17", "watch": WATCH_TERMS_FULL},
+    {"name": "OPTCG Market", "url": "https://www.optcg.gg/market", "watch": WATCH_TERMS_FULL},
     # ── Chinese / Asian Stores (ship to Canada) ──────────────────────────────
-    {
-        "name": "TCGHobby (Taiwan) ✅",
-        "url": "https://www.tcghobby.com/collections/one-piece",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Exp. Share Collectible (US/Chinese) ✅",
-        "url": "https://escollectible.com/pages/chinese-one-piece-tcg",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Ninoma (EU/Asian TCG) ✅",
-        "url": "https://ninoma.com/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Otaku Asia (Asian TCG ships worldwide) ✅",
-        "url": "https://www.otakuasia.com/collections/one-piece-card-game",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set", "op-anniversary", "3rd-anniversary"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary", "anniversary set chinese", "op-4th"]},
-    },
-    {
-        "name": "Buyee Japan Proxy ✅",
-        "url": "https://buyee.jp/item/search/query/one+piece+op-17+booster+box",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary"]},
-    },
-    {
-        "name": "YYT (Asia TCG) ✅",
-        "url": "https://www.yyt.com/en/one-piece",
-        "watch": {"OP-17": ["op-17", "op17"], "3rd Anniversary Set": ["3rd anniversary", "anniversary set"], "4th Anniversary Set (Chinese)": ["4th anniversary", "4th-anniversary", "chinese anniversary"]},
-    },
+    {"name": "TCGHobby (Taiwan) ✅", "url": "https://www.tcghobby.com/collections/one-piece", "watch": WATCH_TERMS_FULL},
+    {"name": "Exp. Share Collectible (US/Chinese) ✅", "url": "https://escollectible.com/pages/chinese-one-piece-tcg", "watch": WATCH_TERMS_FULL},
+    {"name": "Ninoma (EU/Asian TCG) ✅", "url": "https://ninoma.com/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Otaku Asia (Asian TCG ships worldwide) ✅", "url": "https://www.otakuasia.com/collections/one-piece-card-game", "watch": WATCH_TERMS_FULL},
+    {"name": "Buyee Japan Proxy ✅", "url": "https://buyee.jp/item/search/query/one+piece+op-17+booster+box", "watch": WATCH_TERMS_COMPACT},
+    {"name": "YYT (Asia TCG) ✅", "url": "https://www.yyt.com/en/one-piece", "watch": WATCH_TERMS_COMPACT},
 ]
 
 SOLD_OUT_SIGNALS = ["sold out", "out of stock", "unavailable"]
@@ -426,7 +232,7 @@ def check_store(store: dict) -> dict:
         return {prod: False for prod in store["watch"]}
 
     soup = BeautifulSoup(page_html, 'html.parser')
-    
+
     # Locate all distinct product containers (covers Shopify, WooCommerce, and standard grids)
     containers = soup.find_all(['div', 'li', 'article', 'tr'])
 
@@ -463,7 +269,7 @@ def check_store(store: dict) -> dict:
             elif has_buy_button:
                 results[product] = True
                 break
-                
+
     return results
 
 def validate_config():
@@ -471,6 +277,23 @@ def validate_config():
         raise ValueError("TELEGRAM_BOT_TOKEN environment variable is not set.")
     if not TELEGRAM_CHAT_ID:
         raise ValueError("TELEGRAM_CHAT_ID environment variable is not set.")
+
+def build_alert_message(store_name: str, product: str, store_url: str, current_status) -> str:
+    """Builds a distinct, clearly-labeled alert per product so OP-17, OP-21,
+    EB-05, and the anniversary items are never confused with one another."""
+    emoji = PRODUCT_EMOJI.get(product, "🔔")
+    status_text = (
+        "🟢 IN STOCK" if current_status is True
+        else "🟡 PRE-ORDER OPEN" if current_status == "preorder"
+        else "🔴 SOLD OUT"
+    )
+    return (
+        f"🚨 <b>{product} Stock Alert!</b> {emoji}\n\n"
+        f"<b>Product:</b> {emoji} {product}\n"
+        f"<b>Store:</b> {store_name}\n"
+        f"<b>New Status:</b> {status_text}\n\n"
+        f"🔗 <a href='{store_url}'>Link to Store Collection</a>"
+    )
 
 def run_test():
     print("\n=== TEST MODE ===\n")
@@ -530,15 +353,8 @@ def main():
 
                 # State change detection
                 if current_status != previous_status:
-                    if previous_status != "initial_none": # Skip announcing baseline states on boot
-                        status_text = "🟢 IN STOCK" if current_status is True else ("🟡 PRE-ORDER OPEN" if current_status == "preorder" else "🔴 SOLD OUT")
-                        msg = (
-                            f"🚨 <b>Stock Change Alert!</b>\n\n"
-                            f"<b>Store:</b> {store_name}\n"
-                            f"<b>Product:</b> {product}\n"
-                            f"<b>New Status:</b> {status_text}\n\n"
-                            f"🔗 <a href='{store['url']}'>Link to Store Collection</a>"
-                        )
+                    if previous_status != "initial_none":  # Skip announcing baseline states on boot
+                        msg = build_alert_message(store_name, product, store["url"], current_status)
                         send_telegram(msg)
                     history[history_key] = current_status
 
