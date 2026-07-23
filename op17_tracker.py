@@ -236,6 +236,13 @@ def check_store(store: dict) -> dict:
     # Locate all distinct product containers (covers Shopify, WooCommerce, and standard grids)
     containers = soup.find_all(['div', 'li', 'article', 'tr'])
 
+    # Cap on how large a "single product card" block is allowed to be. Large
+    # wrapper divs (e.g. an entire product grid) can span MULTIPLE products at
+    # once, which causes false positives: a buy button that actually belongs
+    # to a neighboring product gets misread as belonging to the one we're
+    # checking. Keeping this tight forces matches toward the specific card.
+    MAX_BLOCK_CHARS = 600
+
     for product, terms in store["watch"].items():
         results[product] = False
         product_blocks = []
@@ -244,14 +251,21 @@ def check_store(store: dict) -> dict:
         for node in containers:
             node_text = node.get_text().lower()
             if any(term.lower() in node_text for term in terms):
-                # Ensure we capture parent card element, not just a deeply nested span
-                if node.name in ['div', 'li', 'article', 'tr'] and len(node_text) < 2000:
+                if node.name in ['div', 'li', 'article', 'tr'] and len(node_text) < MAX_BLOCK_CHARS:
                     product_blocks.append(node_text)
 
         # Fallback to absolute document text if structural block parsing finds nothing
         if not product_blocks:
             if any(term.lower() in page_html for term in terms):
                 product_blocks.append(page_html)
+
+        # CRITICAL: evaluate the SMALLEST (most specific/closest-to-product)
+        # block first. BeautifulSoup returns parent elements before their
+        # children, so without this sort we'd check an oversized wrapper div
+        # (which may contain several unrelated products) before the actual
+        # product card, and misattribute another product's "Add to Cart"
+        # button as belonging to this one.
+        product_blocks.sort(key=len)
 
         # Contextually evaluate isolated product snippets
         for block in product_blocks:
